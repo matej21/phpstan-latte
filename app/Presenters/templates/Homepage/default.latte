@@ -1,0 +1,6 @@
+{* This is the welcome page, you can delete it *}
+
+{block content}
+{foreach $posts as $post}
+	<h1>{$post->getTitle()}</h1>
+{/foreach}

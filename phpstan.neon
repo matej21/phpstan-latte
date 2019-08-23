@@ -1,0 +1,33 @@
+includes:
+    - vendor/phpstan/phpstan-nette/extension.neon
+parameters:
+	fileExtensions:
+		- latte
+services:
+	-
+		class: Latte\Engine
+		setup:
+			- setTempDirectory(%tempDir%/cache)
+			- setAutoRefresh()
+			- Nette\Bridges\ApplicationLatte\UIMacros::install(@self::getCompiler())
+			- Nette\Bridges\FormsLatte\FormMacros::install(@self::getCompiler())
+			- AppTests\PhpStan\PhpStanMacros::install(@self::getCompiler())
+#			- App\Core\Latte\CodeMacros::install(@self::getCompiler())
+#			- '?->onCompile[] = function ($engine) { ?($engine->getCompiler(), ?); }'(@self, App\Core\Latte\AssertMacros::install, TRUE)
+	@PHPStan\Parser\Parser:
+		factory: AppTests\PhpStan\PreprocessParser(
+			...,
+			PHPStan\Parser\CachedParser(
+						originalParser: @directParser
+						cachedNodesByFileCountMax: %cache.nodesByFileCountMax%
+						cachedNodesByStringCountMax: %cache.nodesByStringCountMax%
+			)
+		)
+	@PHPStan\Analyser\NodeScopeResolver:
+		factory: AppTests\PhpStan\NodeScopeResolver
+		arguments:
+			polluteScopeWithLoopInitialAssignments: %polluteScopeWithLoopInitialAssignments%
+			polluteCatchScopeWithTryAssignments: %polluteCatchScopeWithTryAssignments%
+			polluteScopeWithAlwaysIterableForeach: %polluteScopeWithAlwaysIterableForeach%
+			earlyTerminatingMethodCalls: %earlyTerminatingMethodCalls%
+			allowVarTagAboveStatements: %featureToggles.allowVarTagAboveStatements%
